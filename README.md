@@ -11,11 +11,84 @@ go get github.com/ihezebin/jwt
 ```
 
 ## 生成 Token
+```go
+const secret = "secret"
 
+func TestGenerateToken(t *testing.T) {
+token := Default(WithOwner("hezebin"), WithExternalKV("key", "value"), WithExpire(time.Second*30))
+	signed, err := token.Signed(secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Log(signed)
+	t.Log(token.Faked())
+	t.Log(token.Expired())
+	t.Logf("%+v", token.Payload())
+}
+```
 
 ## 校验解析 Token
+```go
+const tokenStr = "eyJlbmNvZGUiOiJiYXNlNjRyYXd1cmwiLCJ0eXAiOiJqd3QiLCJhbGciOiJIU0EyNTYifQ.eyJpc3N1ZXIiOiJnaXRodWIuY29tL2loZXplYmluL2p3dCIsIm93bmVyIjoiaGV6ZWJpbiIsInB1cnBvc2UiOiJhdXRoZW50aWNhdGlvbiIsImlzc3VlZF9hdCI6IjIwMjQtMDQtMDdUMTQ6MTk6MTYuNzkxNzE5KzA4OjAwIiwiZXhwaXJlIjozMDAwMDAwMDAwMCwiZXh0ZXJuYWwiOnsia2V5IjoidmFsdWUifX0.gGzRAc-IbrkaBqM_UxXtxxPMye_-MVzRHZt7sg9lTAA"
+const fakeStr = "eyJlbmNvZGUiOiJiYXNlNjRyYXd1cmwiLCJ0eXAiOiJqd3QiLCJhbGciOiJIU0EyNTYifQ." +
+	"eyJpc3N1ZXIiOiJnaXRodWIuY29tL2loZXplYmluL2p3dCIsIm93bmVyIjoiaGV6ZWJpbiIsInB1cnBvc2UiOiJhdXRoZW50aWNhdGlvbiIsImlzc3VlZF9hdCI6IjIwMjQtMDQtMDdUMTQ6MDU6NTcuNzk3MTgxKzA4OjAwIiwiZXhwaXJlIjozMDAwMDAwMDAwMCwiZXh0ZXJuYWwiOnsia2V5IjoidmFsdWUifX0.KKVwvFwaG8K_KfxHeJVjiAjqA83E0WLiCBLH4FsD3591"
+
+func TestParseToken(t *testing.T) {
+	token, err := Parse(tokenStr, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(token.Faked())
+	t.Log(token.Expired())
+	t.Logf("%+v", token.Payload())
+}
+func TestParseTokenFake(t *testing.T) {
+	token, err := Parse(fakeStr, secret)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	t.Log(token.Faked())
+	t.Log(token.Expired())
+	t.Logf("%+v", token.Payload())
+}
+```
 
 ## 自定义加密算法
+实现自定义加密算法后需要注册统一管理，以便解析 token 时从 header 中读取对应的算法
+
+```go
+import (
+	"crypto/hmac"
+	"crypto/sha256"
+)
+
+type hsa256 struct {
+}
+
+func HSA256() Algorithm {
+	return &hsa256{}
+}
+
+func (alg *hsa256) Name() string {
+	return "HSA256"
+}
+
+func (alg *hsa256) Encrypt(signing, secret string) ([]byte, error) {
+	h := hmac.New(sha256.New, []byte(secret))
+	_, err := h.Write([]byte(signing))
+	if err != nil {
+		return nil, err
+	}
+	return h.Sum(nil), nil
+}
+
+func init() {
+	RegisterAlgorithm(HSA256())
+}
+
+```
 
 # JWT 原理
 

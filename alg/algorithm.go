@@ -1,5 +1,7 @@
 package alg
 
+import "sync"
+
 type Algorithm interface {
 	// Name The name of the algorithm
 	Name() string
@@ -9,17 +11,13 @@ type Algorithm interface {
 	Encrypt(signing, secret string) ([]byte, error)
 }
 
-var algorithmM = make(map[string]Algorithm)
+var algorithms = &sync.Map{}
 
 func GetAlgorithm(name string) Algorithm {
-	return algorithmM[name]
+	alg, _ := algorithms.Load(name)
+	return alg.(Algorithm)
 }
 
-func init() {
-	algs := []Algorithm{
-		HSA256(),
-	}
-	for _, alg := range algs {
-		algorithmM[alg.Name()] = alg
-	}
+func RegisterAlgorithm(alg Algorithm) {
+	algorithms.Store(alg.Name(), alg)
 }

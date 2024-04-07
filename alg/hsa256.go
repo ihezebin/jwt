@@ -24,3 +24,7 @@ func (alg *hsa256) Encrypt(signing, secret string) ([]byte, error) {
 	}
 	return h.Sum(nil), nil
 }
+
+func init() {
+	RegisterAlgorithm(HSA256())
+}
