@@ -124,7 +124,8 @@ Claims 同样使用Base64编码，分为共有声明和私有声明：
 
 - 公有声明: JWT提供了内置关键字用于描述常见的问题，此部分均为可选项，用户根据自己的需求，按需添加key，常见的公共声明如下：
 ```bash
-{   'exp':xxx,  # Expiration Time，此Token的过期时间的时间戳
+{  
+    'exp':xxx,  # Expiration Time，此Token的过期时间的时间戳
     'iss':xxx,  #（Issuer）指明此token的签发者
     'iat':xxx,  # Issued at 指明此创建时间内的时间戳
     'aud':xxx,  # Audience 指明此Token签发面向群体
@@ -132,8 +133,7 @@ Claims 同样使用Base64编码，分为共有声明和私有声明：
 ```
 >特殊说明： 若 encode 得时候 payload 中添加了 exp 字段；则 exp 字段的值需为 "当前时间戳+此token的有效期时间"，例如希望 token 300秒后过期。
 
-`{"exp":time.time()+300}`在执行 decode 时，若检查到 exp 字段，且 token 过期，则抛出
-`jwt.ExpiredSignatureError`
+`{"exp":time.time()+300}`在执行 decode 时，若检查到 exp 字段，且 token 过期，则抛出 `jwt.ExpiredSignatureError`
 
 - 私有声明: 用户可根据自己的业务需求，添加自定义的key，如下：
 ```json
